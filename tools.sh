@@ -227,6 +227,22 @@ show_versions() {
   else
     log_error "Not installed"
   fi
+  echo
+
+  echo "--- Nginx ---"
+  if command -v nginx >/dev/null 2>&1; then
+    # nginx -v prints to stderr, capturing it
+    nginx -v 2>&1 | head -n 1
+    log_success "Location: $(command -v nginx)"
+    
+    if systemctl is-active --quiet nginx; then
+        log_success "Service: Active (Running)"
+    else
+        log_info "Service: Inactive"
+    fi
+  else
+    log_error "Not installed"
+  fi
 
   echo "==============================================="
 }
@@ -277,17 +293,18 @@ echo "12) Zoxide (A smarter cd command. Supports all major shells.)"
 echo "13) Atuin (Sync, search and backup shell history.)"
 echo "14) Gdu (Pretty fast disk usage analyzer.)"
 echo "15) Rust & Cargo 1.85.0 (Systems programming language.)"
-echo "16) All of the above"
+echo "16) Nginx (High-performance web server.)"
+echo "17) All of the above"
 echo
 
-read -rp "Enter choices (e.g., 1 3 5 or 16 for All): " input
+read -rp "Enter choices (e.g., 1 3 5 or 17 for All): " input
 
 # Remove parentheses and commas if user accidentally types them
 choices=$(echo "$input" | tr -d '(),')
 
-# If '16' (All) is present, override with full list 1–15
-if [[ " $choices " =~ (^|[[:space:]])16([[:space:]]|$) ]]; then
-  choices="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15"
+# If '17' (All) is present, override with full list 1–16
+if [[ " $choices " =~ (^|[[:space:]])17([[:space:]]|$) ]]; then
+  choices="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
 fi
 
 # One apt update early to speed things up
@@ -529,6 +546,15 @@ EOF
       # Verify
       log_success "Rust installed. Current version:"
       cargo --version
+      ;;
+    
+    16)
+      log_info "=== Installing Nginx ==="
+      sudo apt install -y nginx
+      log_info "Enabling and starting Nginx service..."
+      sudo systemctl start nginx
+      sudo systemctl enable nginx
+      log_success "Nginx installed and service enabled."
       ;;
 
     *)

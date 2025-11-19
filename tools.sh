@@ -490,6 +490,29 @@ EOF
           log_info "Symlinking Atuin to /usr/bin/atuin..."
           sudo ln -sf "$HOME/.atuin/bin/atuin" /usr/bin/atuin
       fi
+      
+      # --- Configure Config.toml (enter_accept = false) ---
+      ATUIN_CONFIG_DIR="$HOME/.config/atuin"
+      ATUIN_CONFIG_FILE="$ATUIN_CONFIG_DIR/config.toml"
+
+      mkdir -p "$ATUIN_CONFIG_DIR"
+
+      if [ ! -f "$ATUIN_CONFIG_FILE" ]; then
+          # File missing: Create it
+          echo "enter_accept = false" > "$ATUIN_CONFIG_FILE"
+          log_success "Atuin config created with enter_accept = false"
+      else
+          # File exists: Check if key exists
+          if grep -q "^enter_accept" "$ATUIN_CONFIG_FILE"; then
+             # Key exists: Replace true with false
+             sed -i 's/^enter_accept *=.*/enter_accept = false/' "$ATUIN_CONFIG_FILE"
+          else
+             # Key missing: Append it
+             echo "enter_accept = false" >> "$ATUIN_CONFIG_FILE"
+          fi
+          log_success "Atuin config updated (enter_accept = false)"
+      fi
+      # ----------------------------------------------------
 
       BASHRC="$HOME/.bashrc"
       
@@ -510,6 +533,7 @@ bind -x '"\C-r": __atuin_history'
 # bind to the up key
 bind -x '"\e[A": __atuin_history --shell-up-key-binding'
 bind -x '"\eOA": __atuin_history --shell-up-key-binding'
+set -o vi # Enable vi mode
 EOF
               log_success "Atuin configured in .bashrc"
           fi
@@ -562,6 +586,8 @@ EOF
       ;;
   esac
 done
+
+source "$HOME/.bashrc"
 
 echo
 
